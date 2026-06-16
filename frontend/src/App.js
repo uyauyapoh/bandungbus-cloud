@@ -10,6 +10,11 @@ function App() {
   const [selectedMenu, setSelectedMenu] = useState('routes');
   const [loading, setLoading] = useState(true);
 
+  // Upload States
+  const [file, setFile] = useState(null);
+  const [uploadResult, setUploadResult] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+
   const API_URL = 'http://52.221.226.40:5000';
 
   useEffect(() => {
@@ -33,6 +38,29 @@ function App() {
       });
 
   }, []);
+
+  const handleUpload = async (e) => {
+    e.preventDefault();
+    if (!file) return;
+
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append('image', file); // Sesuai dengan field di backend: upload.single('image')
+
+    try {
+      const res = await axios.post(`${API_URL}/upload`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      });
+      setUploadResult(res.data.imageUrl);
+    } catch (error) {
+      console.error(error);
+      alert('Gagal mengupload file, periksa backend atau S3');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const menuButton = {
     padding: '12px 20px',
@@ -107,6 +135,13 @@ function App() {
           onClick={() => setSelectedMenu('stops')}
         >
           Halte Bus
+        </button>
+
+        <button
+          style={{ ...menuButton, backgroundColor: '#2563eb' }}
+          onClick={() => setSelectedMenu('upload')}
+        >
+          Upload Gambar
         </button>
 
       </div>
@@ -190,6 +225,49 @@ function App() {
                     ))
                   }
 
+                </div>
+              )
+            }
+
+            {
+              selectedMenu === 'upload' && (
+                <div style={cardStyle}>
+                  <h2>Upload Gambar Halte/Fasilitas (Simpan ke Amazon S3)</h2>
+                  <p>Fitur ini memenuhi syarat upload file ke S3 untuk ETS Cloud.</p>
+                  
+                  <form onSubmit={handleUpload}>
+                    <input 
+                      type="file" 
+                      accept="image/*"
+                      onChange={(e) => setFile(e.target.files[0])} 
+                      style={{ marginBottom: '15px', display: 'block', padding: '10px', border: '1px solid #ccc', borderRadius: '5px' }}
+                    />
+                    <button 
+                      type="submit" 
+                      style={menuButton} 
+                      disabled={isUploading || !file}
+                    >
+                      {isUploading ? 'Mengunggah...' : 'Upload File'}
+                    </button>
+                  </form>
+                  
+                  {
+                    uploadResult && (
+                      <div style={{ marginTop: '20px', padding: '15px', backgroundColor: '#f8fafc', borderRadius: '10px' }}>
+                        <h3 style={{ color: '#16a34a' }}>Berhasil Diunggah!</h3>
+                        <p><strong>URL CloudFront / S3:</strong></p>
+                        <a href={uploadResult} target="_blank" rel="noreferrer" style={{ wordBreak: 'break-all', color: '#2563eb' }}>
+                          {uploadResult}
+                        </a>
+                        <br/><br/>
+                        <img 
+                          src={uploadResult} 
+                          alt="Hasil Upload S3" 
+                          style={{ maxWidth: '400px', width: '100%', borderRadius: '10px', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }} 
+                        />
+                      </div>
+                    )
+                  }
                 </div>
               )
             }

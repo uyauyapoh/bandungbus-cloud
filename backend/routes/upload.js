@@ -42,8 +42,13 @@ router.post(
   upload.single('image'),
   (req, res) => {
 
+    // Jika ada CloudFront, gunakan domain CloudFront, jika tidak fallback ke S3 (untuk testing lokal awal)
+    const cloudFrontUrl = process.env.CLOUDFRONT_DOMAIN 
+      ? `https://${process.env.CLOUDFRONT_DOMAIN}/${req.file.key}` 
+      : req.file.location;
+
     res.json({
-      imageUrl: req.file.location
+      imageUrl: cloudFrontUrl
     });
 
   }
