@@ -15,7 +15,7 @@ function App() {
   const [uploadResult, setUploadResult] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
-  const API_URL = 'http://52.221.226.40:5000';
+  const API_URL = 'http://3.0.180.198:5000';
 
   useEffect(() => {
 
